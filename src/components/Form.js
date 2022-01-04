@@ -48,7 +48,36 @@ export default function Form() {
   }, []);
 
   const onSubmit = (data) => {
+    if (files.length === 0) return;
+    let filteredData = [];
+    if (searchText) {
+      filteredData = employees.filter((employee) => {
+        if (
+          (
+            employee.FirstName +
+            ' ' +
+            employee.MiddleName +
+            ' ' +
+            employee.LastName +
+            ' - (' +
+            employee.Title +
+            ', ' +
+            employee.Department +
+            ')'
+          ).toLowerCase() === searchText
+        )
+          return employee;
+      });
+      console.log(filteredData);
+    } else setError(true);
     console.log(data);
+
+    if (filteredData.length) {
+      axios.post('http://localhost:8001/api/submitVaccinationForm', {
+        filteredData,
+        data,
+      });
+    }
   };
 
   return (
@@ -79,14 +108,15 @@ export default function Form() {
                   }}
                   filterOptions={filterOptions}
                   getOptionLabel={(option) => {
-                    return `${option.FirstName} ${option.MiddleName} ${option.LastName}`;
+                    return `${option.FirstName} ${option.MiddleName} ${option.LastName} - (${option.Title}, ${option.Department})`;
                   }}
                   renderOption={(props, option) => {
                     return (
                       <div {...props}>
                         <div>
                           {option.FirstName} {option.MiddleName}{' '}
-                          {option.LastName}
+                          {option.LastName} - ({option.Title},{' '}
+                          {option.Department})
                         </div>
                       </div>
                     );
@@ -106,7 +136,7 @@ export default function Form() {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <FormControl variant='outlined' fullWidth error={!!errors.Type}>
                   <InputLabel id='type'>Vaccination Type</InputLabel>
                   <Select
