@@ -39,7 +39,7 @@ export default function Form() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:8001/api/employees`)
+      .get(`https://info.alachuacounty.us/incentive-program/api/employees`)
       .then((response) => {
         console.log(response.data);
         setEmployees(response.data);
@@ -73,10 +73,13 @@ export default function Form() {
     console.log(data);
 
     if (filteredData.length) {
-      axios.post('http://localhost:8001/api/submitVaccinationForm', {
-        filteredData,
-        data,
-      });
+      axios.post(
+        'https://info.alachuacounty.us/incentive-program/api/submitVaccinationForm',
+        {
+          filteredData,
+          data,
+        }
+      );
     }
   };
 
