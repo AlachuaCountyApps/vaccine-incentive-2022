@@ -18,16 +18,17 @@ function App() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position='static'>
         <Toolbar>
-          <div style={{ flexGrow: '1' }}>
+          <Box sx={{ flexGrow: '1' }}>
             <img
               src='assets/acLogo.png'
               alt='Alachua County Logo'
               onClick={refreshPage}
               style={{ cursor: 'pointer' }}
             />
-          </div>
+          </Box>
           <Typography
             variant='h6'
+            component='h1'
             sx={{
               textAlign: 'right',
               lineHeight: '1.5rem',
