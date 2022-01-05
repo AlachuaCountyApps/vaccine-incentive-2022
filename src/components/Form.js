@@ -118,24 +118,9 @@ export default function Form() {
     let filteredData = [];
     if (searchText) {
       filteredData = employees.filter((employee) => {
-        if (
-          (
-            employee.FirstName +
-            ' ' +
-            employee.MiddleName +
-            ' ' +
-            employee.LastName +
-            ' - (' +
-            employee.Title +
-            ', ' +
-            employee.Department +
-            ')'
-          ).toLowerCase() === searchText
-        )
-          return employee;
-        else return [];
+        if (employee.EmployeeID === searchText) return employee;
+        else return null;
       });
-      console.log(filteredData);
       if (filteredData.length) {
         axios
           .post(
@@ -202,13 +187,11 @@ export default function Form() {
                       id='name'
                       options={employees}
                       onInputChange={(event) => {
-                        console.log(event.target);
-                        if (event.target.innerText || event.target.value) {
+                        if (event.currentTarget.children[0]) {
                           setError(false);
-                          if (event.target.value)
-                            setSearchText(event.target.value);
-                          else
-                            setSearchText(event.target.innerText.toLowerCase());
+                          setSearchText(
+                            event.currentTarget.children[0].innerHTML
+                          );
                         } else {
                           setSearchText('');
                           setError(true);
@@ -222,6 +205,9 @@ export default function Form() {
                       renderOption={(props, option) => {
                         return (
                           <div {...props}>
+                            <span style={{ display: 'none' }}>
+                              {option.EmployeeID}
+                            </span>
                             <div>
                               {option.FirstName} {option.MiddleName}{' '}
                               {option.LastName} - ({option.Title},{' '}
