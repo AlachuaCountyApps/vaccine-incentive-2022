@@ -23,6 +23,7 @@ function App() {
             variant='h6'
             component='h1'
             sx={{
+              display: { xs: 'none', sm: 'flex' },
               textAlign: 'right',
               lineHeight: '1.5rem',
               cursor: 'pointer',

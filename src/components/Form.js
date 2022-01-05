@@ -39,6 +39,7 @@ const dropbox = {
   cursor: 'pointer',
   width: '100%',
   textAlign: 'center',
+  marginLeft: '25px',
 };
 
 const inputFile = {
@@ -47,7 +48,7 @@ const inputFile = {
   height: '200px',
   position: 'absolute',
   cursor: 'pointer',
-  marginLeft: '-38%',
+  marginLeft: '-50%',
 };
 
 export default function Form() {
