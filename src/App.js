@@ -12,12 +12,7 @@ function App() {
       <AppBar position='static'>
         <Toolbar>
           <Box sx={{ flexGrow: '1' }}>
-            <img
-              src='assets/acLogo.png'
-              alt='Alachua County Logo'
-              onClick={refreshPage}
-              style={{ cursor: 'pointer' }}
-            />
+            <img src='assets/acLogo.png' alt='Alachua County Logo' onClick={refreshPage} style={{ cursor: 'pointer' }} />
           </Box>
           <Typography
             variant='h6'
@@ -30,7 +25,7 @@ function App() {
             }}
             onClick={refreshPage}
           >
-            Insurance Incentive Program - 2022
+            Vaccination Incentive Program - 2022
           </Typography>
         </Toolbar>
       </AppBar>
