@@ -73,13 +73,35 @@ export default function Form() {
     console.log(data);
 
     if (filteredData.length) {
-      axios.post(
-        'https://info.alachuacounty.us/incentive-program/api/submitVaccinationForm',
-        {
-          filteredData,
-          data,
-        }
-      );
+      axios
+        .post(
+          'https://info.alachuacounty.us/incentive-program/api/submitVaccinationForm',
+          //`http://localhost:8001/api/submitVaccinationForm`,
+          {
+            filteredData,
+            data,
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          if (response.data)
+            files.forEach((file) => {
+              let formData = new FormData();
+              formData.append('itemID', response.data);
+              formData.append('fileObject', file);
+
+              axios({
+                method: 'post',
+                //url: `http://localhost:8001/uploadFile`,
+                url: `https://info.alachuacounty.us/incentive-program/uploadFile`,
+                data: formData,
+                headers: { 'Content-Type': 'multipart/form-data' },
+              });
+            });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
   };
 
