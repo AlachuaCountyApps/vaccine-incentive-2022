@@ -15,8 +15,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useForm, Controller } from 'react-hook-form';
-import { DropzoneArea } from 'material-ui-dropzone';
 import { useReactToPrint } from 'react-to-print';
 import axios from 'axios';
 
@@ -27,6 +27,28 @@ const filterOptions = createFilterOptions({
   stringify: ({ FirstName, LastName, MiddleName }) =>
     `${FirstName} ${LastName} ${MiddleName}`,
 });
+
+const dropbox = {
+  outline: '2px dashed grey',
+  outlineOffset: '-10px',
+  background: 'lightcyan',
+  color: 'dimgray',
+  padding: '10px 10px',
+  minHeight: '200px',
+  position: 'relative',
+  cursor: 'pointer',
+  width: '100%',
+  textAlign: 'center',
+};
+
+const inputFile = {
+  opacity: '0',
+  width: '100%',
+  height: '200px',
+  position: 'absolute',
+  cursor: 'pointer',
+  marginLeft: '-38%',
+};
 
 export default function Form() {
   const printRef = useRef();
@@ -41,6 +63,7 @@ export default function Form() {
   const [error, setError] = useState(false);
   const [fileUploadError, setFileUploadError] = useState(false);
   const [files, setFiles] = useState([]);
+  const [isInitital, setIsInitial] = useState(false);
 
   const [success, setSuccess] = useState(false);
   const [fail, setFail] = useState(false);
@@ -52,6 +75,11 @@ export default function Form() {
   });
 
   useEffect(() => {
+    if (files.length) setIsInitial(false);
+    else setIsInitial(true);
+  }, [files]);
+
+  useEffect(() => {
     axios
       .get(`https://info.alachuacounty.us/incentive-program/api/employees`)
       .then((response) => {
@@ -61,8 +89,32 @@ export default function Form() {
       .catch((e) => console.log(e));
   }, []);
 
+  const getFiles = (e) => {
+    if (e.target.files.length > 0) {
+      setFileUploadError(false);
+      let tempFiles = [];
+      for (let i = 0; i < e.target.files.length; i++)
+        tempFiles.push(e.target.files[i]);
+      setFiles((prevState) => [...prevState, ...tempFiles]);
+    } else setFileUploadError(true);
+  };
+
+  const createThumbnail = (file) => {
+    const url = URL.createObjectURL(file);
+    return url;
+  };
+
+  const removeFile = (id) => {
+    const tempFiles = files.filter((file) => file.lastModified !== id);
+    setFiles([...tempFiles]);
+    if (tempFiles.length === 0) setIsInitial(true);
+  };
+
   const onSubmit = (data) => {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      setFileUploadError(true);
+      return;
+    }
     let filteredData = [];
     if (searchText) {
       filteredData = employees.filter((employee) => {
@@ -84,50 +136,49 @@ export default function Form() {
         else return [];
       });
       console.log(filteredData);
+      if (filteredData.length) {
+        axios
+          .post(
+            'https://info.alachuacounty.us/incentive-program/api/submitVaccinationForm',
+            //`http://localhost:8001/api/submitVaccinationForm`,
+            {
+              filteredData,
+              data,
+            }
+          )
+          .then((response) => {
+            console.log(response.data);
+            if (response.data) {
+              setApplicationID(response.data);
+              setSuccess(true);
+              files.forEach((file) => {
+                let formData = new FormData();
+                formData.append('itemID', response.data);
+                formData.append('fileObject', file);
+
+                axios({
+                  method: 'post',
+                  //url: `http://localhost:8001/uploadFile`,
+                  url: `https://info.alachuacounty.us/incentive-program/uploadFile`,
+                  data: formData,
+                  headers: { 'Content-Type': 'multipart/form-data' },
+                });
+              });
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            setFail(true);
+            setErrorMessage(error.message);
+          });
+      } else {
+        setFail(true);
+        setErrorMessage(
+          'There is some issue with submitting the form please contact ITS to get this resolved.'
+        );
+      }
     } else setError(true);
     console.log(data);
-
-    if (filteredData.length) {
-      axios
-        .post(
-          'https://info.alachuacounty.us/incentive-program/api/submitVaccinationForm',
-          //`http://localhost:8001/api/submitVaccinationForm`,
-          {
-            filteredData,
-            data,
-          }
-        )
-        .then((response) => {
-          console.log(response.data);
-          if (response.data) {
-            setApplicationID(response.data);
-            setSuccess(true);
-            files.forEach((file) => {
-              let formData = new FormData();
-              formData.append('itemID', response.data);
-              formData.append('fileObject', file);
-
-              axios({
-                method: 'post',
-                //url: `http://localhost:8001/uploadFile`,
-                url: `https://info.alachuacounty.us/incentive-program/uploadFile`,
-                data: formData,
-                headers: { 'Content-Type': 'multipart/form-data' },
-              });
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-          setFail(true);
-          setErrorMessage(error.message);
-        });
-    } else {
-      setFail(true);
-      setErrorMessage(
-        'There is some issue with submitting the form please contact ITS to get this resolved.'
-      );
-    }
   };
 
   return (
@@ -151,13 +202,17 @@ export default function Form() {
                       id='name'
                       options={employees}
                       onInputChange={(event) => {
+                        console.log(event.target);
                         if (event.target.innerText || event.target.value) {
                           setError(false);
                           if (event.target.value)
                             setSearchText(event.target.value);
                           else
                             setSearchText(event.target.innerText.toLowerCase());
-                        } else setSearchText('');
+                        } else {
+                          setSearchText('');
+                          setError(true);
+                        }
                         return event.target;
                       }}
                       filterOptions={filterOptions}
@@ -223,27 +278,38 @@ export default function Form() {
                     <Typography variant='h6' component='h2'>
                       Upload Both Sides of Card
                     </Typography>
-                    <DropzoneArea
-                      filesLimit={6}
-                      maxFileSize={5000000}
-                      acceptedFiles={[
-                        'image/jpeg',
-                        'image/png',
-                        'application/pdf',
-                        'application/msword',
-                        'image/gif',
-                        'image/bmp',
-                        'image/tiff',
-                        'text/plain',
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                      ]}
-                      onChange={(uploadedFiles) => {
-                        setFiles(uploadedFiles);
-                        if (uploadedFiles.length === 0)
-                          setFileUploadError(true);
-                        else setFileUploadError(false);
-                      }}
+                  </Grid>
+                  <Grid item xs={12} style={dropbox}>
+                    <input
+                      type='file'
+                      multiple
+                      name='uploadFiles'
+                      accept='image/*, text/*, .pdf, .doc,.docx,.xml,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                      style={inputFile}
+                      onChange={getFiles}
                     />
+                    {isInitital && (
+                      <p>
+                        Drag your file(s) here to begin
+                        <br /> or click to Browse
+                      </p>
+                    )}
+                    {files.map((file) => (
+                      <>
+                        <Button
+                          title='remove'
+                          sx={{ elevation: '2' }}
+                          onClick={() => removeFile(file.lastModified)}
+                        >
+                          <CloseIcon />
+                        </Button>
+                        <img
+                          src={createThumbnail(file)}
+                          width='15%'
+                          alt={file.name}
+                        />
+                      </>
+                    ))}
                   </Grid>
 
                   {fileUploadError === true ? (
